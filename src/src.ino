@@ -49,7 +49,9 @@ void loop() {
     loopOTA();
 
     if (!artnetLoop()) {
-        //idleAnimationLoop();
+        // if no Artnet Data received for TIMEOUT ms
+        fillColor(INIT_COLOR);
+        FastLED.show();
     }
 
 }

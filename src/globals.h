@@ -5,7 +5,7 @@
 #define NUM_LEDS    99      
 #define LED_PIN     12
 #define BRIGHTNESS  255
-#define INIT_COLOR  CRGBW(0, 0, 0, 255)
+#define INIT_COLOR  CRGBW(255, 100, 0, 255)
 extern CRGBW leds[];
 extern CRGB *ledsRGB;
 

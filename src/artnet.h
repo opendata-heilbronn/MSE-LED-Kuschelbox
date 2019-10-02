@@ -42,11 +42,11 @@ void onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *d
     }
 
     // read universe and put into the right part of the display buffer
-    for (int i = 0; i < length / 3; i++) {
+    for (int i = 0; i < length / 4; i++) {
         // Serial.println(i);
-        int led = i + (universe - startUniverse) * (previousDataLength / 3);
+        int led = i + (universe - startUniverse) * (previousDataLength / 4);
         if (led < NUM_LEDS) {
-            leds[led] = CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]);
+            leds[led] = CRGBW(data[i * 4], data[i * 4 + 1], data[i * 4 + 2], data[i * 4 + 3]);
             // setLed(led % WIDTH, led / WIDTH, CRGB(data[i * 3], data[i * 3 + 1], data[i * 3 + 2]));
         }
     }
