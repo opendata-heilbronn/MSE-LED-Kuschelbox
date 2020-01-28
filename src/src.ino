@@ -4,29 +4,19 @@
 #include "globals.h"
 #include "artnet.h"
 #include "ota.h"
-
-#include <FastLED.h>
-#include "FastLED_RGBW.h"
+#include "leds.h"
+#include "mqttLogic.h"
 
 #include <WiFiMulti.h>
 
 WiFiMulti wifi;
-CRGBW leds[NUM_LEDS];
-CRGB *ledsRGB = (CRGB *) &leds[0];
-
-void fillColor(CRGBW color) {
-    for(uint16_t i = 0; i < NUM_LEDS; i++) {
-        leds[i] = color;
-    }
-}
 
 void setup() {
     Serial.begin(115200);
 
-    FastLED.addLeds<WS2812B, LED_PIN, RGB>(ledsRGB, getRGBWsize(NUM_LEDS));
-    FastLED.setBrightness(BRIGHTNESS);
-    fillColor(INIT_COLOR);
-    FastLED.show();
+    // initialize LEDs to default color
+    initLeds();
+    loopLeds();
 
     wifi.addAP(WIFI_SSID, WIFI_PASS);
 
@@ -40,7 +30,7 @@ void setup() {
     }
 
     initOTA();
-
+    initMqtt();
     artnetInit();
 }
 
@@ -48,10 +38,15 @@ void loop() {
     wifi.run();
     loopOTA();
 
-    if (!artnetLoop()) {
-        // if no Artnet Data received for TIMEOUT ms
-        fillColor(INIT_COLOR);
-        FastLED.show();
+    if(!otaRunning) {
+        loopLeds();
+        loopMqtt();
     }
+
+    // if (!artnetLoop()) {
+    //     // if no Artnet Data received for TIMEOUT ms
+    //     fillColor(INIT_COLOR);
+    //     FastLED.show();
+    // }
 
 }

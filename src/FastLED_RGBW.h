@@ -30,6 +30,7 @@ struct CRGBW  {
 			};
 		};
 		uint8_t raw[4];
+		uint32_t raw32;
 	};
  
 	CRGBW(){}
@@ -54,6 +55,22 @@ struct CRGBW  {
 		this->g = c.g;
 		this->b = c.b;
 		this->white = 0;
+    }
+
+	// /// allow construction from 32-bit (really 24-bit) bit 0xRRGGBB color code
+    // inline CRGBW( uint32_t colorcode)  __attribute__((always_inline))
+    // : w((colorcode >> 24) & 0xFF), r((colorcode >> 16) & 0xFF), g((colorcode >> 8) & 0xFF), b((colorcode >> 0) & 0xFF)
+    // {
+    // }
+
+	/// allow assignment from 32-bit (really 24-bit) 0xRRGGBB color code
+	inline CRGBW& operator= (const uint32_t colorcode) __attribute__((always_inline))
+    {
+		w = (colorcode >> 24) & 0xFF;
+        r = (colorcode >> 16) & 0xFF;
+        g = (colorcode >>  8) & 0xFF;
+        b = (colorcode >>  0) & 0xFF;
+        return *this;
     }
 };
  
