@@ -5,7 +5,6 @@
 const char* effectNames[] = {
     "static",
     "artnet",
-    "rainbow",
 };
 int numEffects = sizeof(effectNames) / sizeof(effectNames[0]);
 
@@ -130,17 +129,6 @@ void setLedProgress(uint8_t percent) {
     }
 }
 
-void rainbowAnim() {
-    uint32_t now = millis();
-    for(uint16_t i = 0; i < NUM_LEDS; i++) {
-        uint16_t timeOffset = (255UL * (now % 5000)) / 5000;
-        uint16_t ledOffset = (255UL * i) / (NUM_LEDS - 1);
-        uint8_t hue = (timeOffset + ledOffset) % 256;
-        leds[i] = CHSV(hue, 255, 255);
-    }
-    FastLED.show();
-}
-
 void initLeds() {
     //leds.begin();
     // idleAnimationSetup();
@@ -167,9 +155,6 @@ void loopLeds() {
                     break;
                 case fx_artnet:
                     artnetLoop();
-                    break;
-                case fx_rainbow:
-                    rainbowAnim();
                     break;
                 case fx_animation:
                     if(millis() - lastAnimationStep > (curLedState.transitionTime / 256)) {

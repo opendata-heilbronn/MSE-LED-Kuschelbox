@@ -6,7 +6,6 @@
 typedef enum effect {
     fx_static           = 0,
     fx_artnet           = 1,
-    fx_rainbow          = 2,
     fx_animation        = 100,  // internal only
 } fx_t;
 

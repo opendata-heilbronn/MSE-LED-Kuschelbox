@@ -73,7 +73,7 @@ struct CRGBW {
 
     // allow assignment and cast to 32-bit 0xWWRRGGBB color code
     inline operator uint32_t() const {
-        uint32_t out;
+        uint32_t out = 0;
         out |= (w << 24);
         out |= (r << 16);
         out |= (g << 8);

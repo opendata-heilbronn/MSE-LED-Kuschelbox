@@ -41,7 +41,6 @@ void sendAutoDiscovery() {
     }
 
     payload["white_value"] = true; // enable for RGBW
-    payload["transition"] = true;
 
     // DEBUG.println("Payload:");
     // serializeJsonPretty(payload, DEBUG);
@@ -64,7 +63,6 @@ void sendLedState() {
     c["g"] = (state.color >> 8) & 0xFF;
     c["b"] = (state.color >> 0) & 0xFF;
     payload["white_value"] = (state.color >> 24) & 0xFF;
-    payload["transition_time"] = (float)state.transitionTime / 1000;
 
     // DEBUG.println(state.color, 16);
     // DEBUG.println("State:");
@@ -140,6 +138,7 @@ void mqttMessageHandler(String &topic, String &payload) {
 }
 
 
+bool firstConnect = true;
 void connectMqtt() {
     DEBUG.print("Connecting to broker");
     
@@ -157,7 +156,9 @@ void connectMqtt() {
     DEBUG.println(" done.");
     mqtt.subscribe(baseTopic + "/set");
 
-    sendLedState();
+    if(!firstConnect) {
+        sendLedState();
+    }
 }
 
 
@@ -169,6 +170,11 @@ void initMqtt() {
 
     connectMqtt();
     sendAutoDiscovery();
+    if(firstConnect) {
+        firstConnect = false;
+        delay(1); // somehow homeassistant doesn't recognize the initial state if it's sent too quickly after the config
+        sendLedState();
+    }
 }
 
 

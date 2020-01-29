@@ -8,7 +8,7 @@
 //1,65m => 99 LEDs
 #define NUM_LEDS    99      
 #define LED_PIN     12
-#define INIT_COLOR  CRGBW(255, 100, 0, 255).raw32
+#define INIT_COLOR  CRGBW(255, 100, 0, 255)
 #define INIT_STATE  true
 #define INIT_BRIGHTNESS  255
 extern CRGBW leds[];
