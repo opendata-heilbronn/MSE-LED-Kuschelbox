@@ -18,7 +18,7 @@ void sendAutoDiscovery() {
     DynamicJsonDocument payload(500);
     
     payload["~"] = baseTopic;
-    payload["ret"] = true; //enable retain of messages on MQTT broker
+    payload["ret"] = false; // enable retain of command messages on MQTT broker
     payload["name"] = MY_HOSTNAME;
     payload["unique_id"] = MY_HOSTNAME;
     payload["cmd_t"] = "~/set";
@@ -33,10 +33,8 @@ void sendAutoDiscovery() {
         for(uint8_t i = 0; i < numEffects; i++) {
             fx.add(effectNames[i]);
         }
-
     }
 
-    // those two options make autodiscovery not work anymore somehow
     payload["white_value"] = true; // enable for RGBW
     payload["transition"] = true;
 
@@ -45,7 +43,7 @@ void sendAutoDiscovery() {
 
     String buf;
     serializeJson(payload, buf);
-    mqtt.publish(String(baseTopic + "/config"), buf); 
+    mqtt.publish(String(baseTopic + "/config"), buf, true, 0); // publish config with retained flag 
 
 }
 
@@ -68,11 +66,13 @@ void sendLedState() {
 
     String buf;
     serializeJson(payload, buf);
-    mqtt.publish(String(baseTopic + "/state"), buf); 
+    mqtt.publish(String(baseTopic + "/state"), buf, true, 0); // retain = true
 }
 
 
 void parseHAssCmd(String &payload) {
+    // Update: should not be needed anymore, due to retain being set to false in the discovery message
+    // TODO: remove if first real command gets ignored
     // ignore first message that controller receives, so it will init correctly
     // workaround TODO: find neater solution
     if(ignoreRetainedMessage) {
@@ -137,6 +137,7 @@ void connectMqtt() {
     
     uint32_t initStart = millis();
     mqtt.setOptions(5, false, 1000);
+    mqtt.setWill(String(baseTopic + "/state").c_str(), "{\"state\": \"OFF\"}");
     while(!mqtt.connect(MY_HOSTNAME, MQTT_USER, MQTT_PASS)) {
         DEBUG.print(".");
         delay(250);
@@ -147,6 +148,8 @@ void connectMqtt() {
     }
     DEBUG.println(" done.");
     mqtt.subscribe(baseTopic + "/set");
+
+    sendLedState();
 }
 
 
@@ -158,7 +161,6 @@ void initMqtt() {
 
     connectMqtt();
     sendAutoDiscovery();
-    sendLedState();
 }
 
 
