@@ -1,6 +1,7 @@
 #include "mqttLogic.h"
 #include "globals.h"
 #include "leds.h"
+#include "ledAnimation.h"
 #include <ArduinoJson.h>
 #include <MQTT.h>
 #include <WiFiClient.h>
@@ -33,6 +34,10 @@ void sendAutoDiscovery() {
         for(uint8_t i = 0; i < numEffects; i++) {
             fx.add(effectNames[i]);
         }
+        anim_t *anims = getAnimations();
+        for(uint8_t i = 0; i < getAnimationCount(); i++) {
+            fx.add(anims[i].animName);
+        }
     }
 
     payload["white_value"] = true; // enable for RGBW
@@ -53,12 +58,13 @@ void sendLedState() {
     DynamicJsonDocument payload(500);
     payload["state"] = state.state ? "ON" : "OFF";
     payload["brightness"] = state.brightness;
-    payload["effect"] = effectNames[state.effect];
+    payload["effect"] = getCurLedEffectName();
     JsonObject c = payload.createNestedObject("color");
-    c["b"] = (state.color >> 16) & 0xFF;
-    c["r"] = (state.color >> 8) & 0xFF;
-    c["g"] = (state.color >> 0) & 0xFF;  
+    c["r"] = (state.color >> 16) & 0xFF;
+    c["g"] = (state.color >> 8) & 0xFF;
+    c["b"] = (state.color >> 0) & 0xFF;
     payload["white_value"] = (state.color >> 24) & 0xFF;
+    payload["transition_time"] = (float)state.transitionTime / 1000;
 
     // DEBUG.println(state.color, 16);
     // DEBUG.println("State:");
@@ -88,7 +94,7 @@ void parseHAssCmd(String &payload) {
         return;
     }
 
-    setLedState(doc["state"] == "ON");
+    setLedState((doc["state"] == "ON"));
     
     JsonVariant br = doc["brightness"];
     if(!br.isNull()) {
@@ -106,19 +112,21 @@ void parseHAssCmd(String &payload) {
         uint8_t g = c["g"];
         uint8_t b = c["b"];
 
-        uint32_t color =  (b << 16) | (r << 8) | g; 
+        uint32_t color =  (r << 16) | (g << 8) | b; 
         
         setLedColor(color);
     }
 
     JsonVariant whiteVal = doc["white_value"];
-    if (!whiteVal.isNull()) {
+    if(!whiteVal.isNull()) {
         setLedWhiteValue(whiteVal);
     }
 
-    // doesn't work anyways
-    // uint8_t transition = doc["transition"];
-    // uint8_t white_value = doc["white_value"];
+    JsonVariant transitionTime = doc["transition"];
+    if(!transitionTime.isNull()) {
+        float trans = transitionTime;
+        setLedTransitionTime(trans * 1000);
+    }
 
     sendLedState();
 }

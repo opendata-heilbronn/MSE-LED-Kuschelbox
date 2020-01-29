@@ -42,39 +42,46 @@ struct CRGBW  {
 		w = wht;
 	}
  
-	inline void operator = (const CRGB c) __attribute__((always_inline)){ 
+	inline void operator = (const CRGB c) __attribute__((always_inline)) { 
 		this->r = c.r;
 		this->g = c.g;
 		this->b = c.b;
 		this->white = 0;
 	}
 
-    inline CRGBW(const CRGB& c) __attribute__((always_inline))
-    {
-        this->r = c.r;
+	inline CRGBW(const CRGB& c) __attribute__((always_inline)) {
+		this->r = c.r;
 		this->g = c.g;
 		this->b = c.b;
 		this->white = 0;
-    }
+	}
 
-	// /// allow construction from 32-bit (really 24-bit) bit 0xRRGGBB color code
-    // inline CRGBW( uint32_t colorcode)  __attribute__((always_inline))
-    // : w((colorcode >> 24) & 0xFF), r((colorcode >> 16) & 0xFF), g((colorcode >> 8) & 0xFF), b((colorcode >> 0) & 0xFF)
-    // {
-    // }
+	/// allow construction from 32-bit bit 0xWWRRGGBB color code
+	inline CRGBW( uint32_t colorcode)  __attribute__((always_inline))
+	: g((colorcode >> 8) & 0xFF), r((colorcode >> 16) & 0xFF), b((colorcode >> 0) & 0xFF), w((colorcode >> 24) & 0xFF) {
+	}
 
-	/// allow assignment from 32-bit (really 24-bit) 0xRRGGBB color code
-	inline CRGBW& operator= (const uint32_t colorcode) __attribute__((always_inline))
-    {
+	/// allow assignment from 32-bit 0xWWRRGGBB color code
+	inline CRGBW& operator= (const uint32_t colorcode) __attribute__((always_inline)) {
 		w = (colorcode >> 24) & 0xFF;
-        r = (colorcode >> 16) & 0xFF;
-        g = (colorcode >>  8) & 0xFF;
-        b = (colorcode >>  0) & 0xFF;
-        return *this;
-    }
+		r = (colorcode >> 16) & 0xFF;
+		g = (colorcode >>  8) & 0xFF;
+		b = (colorcode >>  0) & 0xFF;
+		return *this;
+	}
+
+	// allow assignment and cast to 32-bit 0xWWRRGGBB color code
+	inline operator uint32_t() const {
+		uint32_t out;
+		out |= (w << 24);
+		out |= (r << 16);
+		out |= (g <<  8);
+		out |= (b <<  0);
+		return out;
+	}
 };
  
-inline uint16_t getRGBWsize(uint16_t nleds){
+inline uint16_t getRGBWsize(uint16_t nleds) {
 	uint16_t nbytes = nleds * 4;
 	if(nbytes % 3 > 0) return nbytes / 3 + 1;
 	else return nbytes / 3;

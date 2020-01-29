@@ -1,4 +1,6 @@
 #include "leds.h"
+#define ANIMATION_USE_FASTLED
+#include "ledAnimation.h"
 
 const char* effectNames[] = {
     "static",
@@ -23,24 +25,14 @@ fx_t effectStringToFx(String effectName) {
 }
 
 
-
 ledState_t curLedState = {
     INIT_STATE,
     INIT_BRIGHTNESS,
     INIT_COLOR,
-    fx_static
+    fx_static,
+    5000
 };
 
-
-
-
-/*void applyLedState() {
-    FastLED.setBrightness(curLedState.brightness);
-    if(curLedState.effect == "static") {
-        fill_solid(leds, NUM_LEDS, CRGB(curLedState.color));
-        FastLED.show();
-    }
-}*/
 
 void fill_solid( struct CRGBW * leds, int numToFill, CRGBW color) {
     for (int i = 0; i < numToFill; i++) {
@@ -53,10 +45,14 @@ void fill_solid( struct CRGBW * leds, int numToFill, CRGB color) {
 }
 
 void fill_solid( struct CRGBW * leds, int numToFill, uint32_t color) {
-    CRGBW col;
-    col.raw32 = color;
-    fill_solid(leds, numToFill, col);
+    CRGBW rgbw;
+    rgbw.r = (color >> 16) & 0xFF;
+    rgbw.g = (color >>  8) & 0xFF;
+    rgbw.b = (color >>  0) & 0xFF;
+    rgbw.w = (color >> 24) & 0xFF;
+    fill_solid(leds, numToFill, rgbw);
 }
+
 
 void fillColor(uint32_t color) {
     fill_solid(leds, NUM_LEDS, color);
@@ -74,6 +70,7 @@ void setLedBrightness(uint8_t brightness) {
 void setLedColor(uint32_t color) {
     curLedState.color &= 0xFF000000; // keep white value
     curLedState.color |= color & 0x00FFFFFF;
+    setAnimationBaseColor(color);
 }
 
 void setLedWhiteValue(uint8_t whiteValue) {
@@ -81,10 +78,30 @@ void setLedWhiteValue(uint8_t whiteValue) {
     curLedState.color |= whiteValue << 24;
 }
 
+void setLedTransitionTime(uint32_t transition) {
+    curLedState.transitionTime = transition;
+}
+
 void setLedEffect(String effect) {
-    fx_t a = effectStringToFx(effect);
-    if(a > -1) {
-        curLedState.effect = a;
+    fx_t fx = effectStringToFx(effect);
+    if(fx > -1) {
+        curLedState.effect = fx;
+    }
+    else {
+        uint8_t anim = animationNameToId(effect.c_str());
+        if(anim > -1) {
+            setAnimation(anim);
+            curLedState.effect = fx_animation;
+        }
+    }
+}
+
+const char* getCurLedEffectName() {
+    if(curLedState.effect != fx_animation) {
+        return effectNames[curLedState.effect];
+    }
+    else {
+        return getCurAnimationName();
     }
 }
 
@@ -93,6 +110,7 @@ void setLedState(ledState_t state) {
     curLedState.brightness = state.brightness;
     curLedState.color = state.color;
     curLedState.effect = state.effect;
+    curLedState.transitionTime = state.transitionTime;
 
     //applyLedState();
 }
@@ -128,34 +146,38 @@ void initLeds() {
     // idleAnimationSetup();
     //applyLedState();
     FastLED.addLeds<WS2812B, LED_PIN, RGB>(ledsRGB, getRGBWsize(NUM_LEDS));
+    initAnimation(NUM_LEDS);
 }
 
-uint32_t lastLedUpdate = 0;
-uint16_t animationStep = 0;
+uint32_t lastLedUpdate = 0, lastAnimationStep = 0;
 
 void loopLeds() {
     if(millis() - lastLedUpdate > (1000 / UPDATES_PER_SECOND)) {
         lastLedUpdate = millis();
-        // simple rainbow fade animation
 
         if(!curLedState.state) {
             fill_solid(leds, NUM_LEDS, CRGB::Black);
             FastLED.show();
         }
         else {
-            //Serial.print(curLedState.effect);
             switch(curLedState.effect) {
                 case fx_static:
-                    //Serial.println("static");
                     fill_solid(leds, NUM_LEDS, curLedState.color);
                     FastLED.show();
                     break;
                 case fx_artnet:
-                    //Serial.println("artnet");
                     artnetLoop();
                     break;
                 case fx_rainbow:
                     rainbowAnim();
+                    break;
+                case fx_animation:
+                    if(millis() - lastAnimationStep > (curLedState.transitionTime / 256)) {
+                        // TODO: not sure if I want to skip animation steps, or freeze when timing is not met
+                        lastAnimationStep = millis();
+                        stepAnimation();
+                        FastLED.show();
+                    }
                     break;
                 default:
                     break;

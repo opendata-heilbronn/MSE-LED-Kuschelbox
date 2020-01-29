@@ -12,7 +12,7 @@
 WiFiMulti wifi;
 
 void setup() {
-    Serial.begin(115200);
+    DEBUG.begin(115200);
 
     // initialize LEDs to default color
     initLeds();
@@ -20,13 +20,13 @@ void setup() {
 
     wifi.addAP(WIFI_SSID, WIFI_PASS);
 
-    Serial.println("Connecting Wifi...");
+    DEBUG.println("Connecting Wifi...");
     if (wifi.run() == WL_CONNECTED) {
         WiFi.setHostname(MY_HOSTNAME);
-        Serial.println("");
-        Serial.println("WiFi connected");
-        Serial.println("IP address: ");
-        Serial.println(WiFi.localIP());
+        DEBUG.println("");
+        DEBUG.println("WiFi connected");
+        DEBUG.println("IP address: ");
+        DEBUG.println(WiFi.localIP());
     }
 
     initOTA();

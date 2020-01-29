@@ -1,4 +1,5 @@
 #include "config.h"
+#define FASTLED_INTERNAL // disable the FastLED pragma messages
 #include <FastLED.h>
 #include "FastLED_RGBW.h"
 
@@ -12,7 +13,9 @@
 #define INIT_BRIGHTNESS  255
 extern CRGBW leds[];
 extern CRGB *ledsRGB;
-#define UPDATES_PER_SECOND 40
+#define UPDATES_PER_SECOND 60
+
+#define ANIMATION_USE_FASTLED
 
 #define ARTNET_TIMEOUT 5000 // start idle animation after 5s of Artnet missing
 
