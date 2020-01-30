@@ -13,7 +13,7 @@ CRGB *ledsRGB = (CRGB *) &leds[0];
 
 
 fx_t effectStringToFx(String effectName) {
-    fx_t result = (fx_t)-1;
+    fx_t result = fx_undefined;
     for(int i = 0; i < numEffects; i++) {
         if(effectName == String(effectNames[i])) {
             result = (fx_t)i;
@@ -77,13 +77,13 @@ void setLedWhiteValue(uint8_t whiteValue) {
     curLedState.color |= whiteValue << 24;
 }
 
-void setLedTransitionTime(uint32_t transition) {
-    curLedState.transitionTime = transition;
+void setLedAnimationTime(uint32_t transition) {
+    curLedState.animationTime = transition;
 }
 
 void setLedEffect(String effect) {
     fx_t fx = effectStringToFx(effect);
-    if(fx > -1) {
+    if(fx != fx_undefined) {
         curLedState.effect = fx;
     }
     else {
@@ -109,7 +109,7 @@ void setLedState(ledState_t state) {
     curLedState.brightness = state.brightness;
     curLedState.color = state.color;
     curLedState.effect = state.effect;
-    curLedState.transitionTime = state.transitionTime;
+    curLedState.animationTime = state.animationTime;
 
     //applyLedState();
 }
@@ -157,7 +157,7 @@ void loopLeds() {
                     artnetLoop();
                     break;
                 case fx_animation:
-                    if(millis() - lastAnimationStep > (curLedState.transitionTime / 256)) {
+                    if(millis() - lastAnimationStep > (curLedState.animationTime / 256)) {
                         // TODO: not sure if I want to skip animation steps, or freeze when timing is not met
                         lastAnimationStep = millis();
                         stepAnimation();
