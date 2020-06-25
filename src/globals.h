@@ -21,6 +21,6 @@ extern CRGB *ledsRGB;
 
 #define BUILTIN_LED 2
 
-#define BROKER_IP "mse-pi.lan"
+#define BROKER_IP "mse-pi.makerspace.experimenta.science"
 
 extern bool otaRunning;
