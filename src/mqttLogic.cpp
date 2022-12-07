@@ -26,7 +26,9 @@ void sendAutoDiscovery() {
     payload["stat_t"] = "~/state";
     payload["schema"] = "json";
     payload["brightness"] = true;
-    payload["rgb"] = true;
+    payload["color_mode"] = true;
+    payload.createNestedArray("supported_color_modes").add("rgbw");
+    
 
     if(numEffects > 0) {
         payload["effect"] = true;
@@ -39,8 +41,6 @@ void sendAutoDiscovery() {
             fx.add(anims[i].animName);
         }
     }
-
-    payload["white_value"] = true; // enable for RGBW
 
     // DEBUG.println("Payload:");
     // serializeJsonPretty(payload, DEBUG);
@@ -62,7 +62,8 @@ void sendLedState() {
     c["r"] = (state.color >> 16) & 0xFF;
     c["g"] = (state.color >> 8) & 0xFF;
     c["b"] = (state.color >> 0) & 0xFF;
-    payload["white_value"] = (state.color >> 24) & 0xFF;
+    c["w"] = (state.color >> 24) & 0xFF;
+    // payload["white_value"] = (state.color >> 24) & 0xFF;
 
     // DEBUG.println(state.color, 16);
     // DEBUG.println("State:");
@@ -104,12 +105,13 @@ void parseHAssCmd(String &payload) {
         uint32_t color =  (r << 16) | (g << 8) | b; 
         
         setLedColor(color);
+        setLedWhiteValue((uint8_t)c["w"]);
     }
 
-    JsonVariant whiteVal = doc["white_value"];
-    if(!whiteVal.isNull()) {
-        setLedWhiteValue(whiteVal);
-    }
+    // JsonVariant whiteVal = doc["white_value"];
+    // if(!whiteVal.isNull()) {
+    //     setLedWhiteValue(whiteVal);
+    // }
 
     JsonVariant transitionTime = doc["transition"];
     if(!transitionTime.isNull()) {
